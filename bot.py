@@ -7,8 +7,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import CommandStart
 
 # 🔐 Вставь свои ключи сюда
-TELEGRAM_TOKEN = "7442046703:AAETWTWOyijJyx9HZ2du6tzn9_oA9pkfyM4"
-OPENROUTER_API_KEY = "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"
+TELEGRAM_TOKEN = ""
+OPENROUTER_API_KEY = ""
 
 logging.basicConfig(level=logging.INFO)
 
