@@ -35,7 +35,9 @@ async def ask_openrouter(message_text: str) -> str:
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/Southcentral69/psychology-bot",
+        "X-Title": "telegram-psychology-bot"
     }
     payload = {
         "model": "mistralai/mistral-7b-instruct",  # Можешь заменить на любую другую доступную
