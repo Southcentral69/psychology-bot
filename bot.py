@@ -1,85 +1,67 @@
-import os
 import logging
-import aiohttp
-import asyncio
+import os
+
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import Message
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import CommandStart
+from aiogram.utils import executor
+import aiohttp
 
-# Получаем переменные окружения
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+
+# Получаем токены из переменных окружения
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# Проверка на наличие токенов
+# Проверка наличия токенов
 if TELEGRAM_TOKEN is None:
-    raise ValueError("❌ Переменная TELEGRAM_TOKEN не найдена.")
+    raise ValueError("TELEGRAM_TOKEN is not set")
 if OPENROUTER_API_KEY is None:
-    raise ValueError("❌ Переменная OPENROUTER_API_KEY не найдена.")
+    raise ValueError("OPENROUTER_API_KEY is not set")
 
-logging.basicConfig(level=logging.INFO)
-
+# Инициализация бота и диспетчера
 bot = Bot(token=TELEGRAM_TOKEN)
-dp = Dispatcher(storage=MemoryStorage())
+dp = Dispatcher()
 
-# Формируем промпт для психолога
-def create_prompt(user_input):
-    return f"""
-Ты — опытный детский психолог. Твоя задача — поддержать ребёнка, который попал в трудную ситуацию.
-Говори добрым, простым языком. Успокой, поддержи, не осуждай.
-Если ребёнок упоминает насилие или страх — скажи, что он не виноват, и предложи обратиться к взрослым, которым он доверяет.
-
-Сообщение ребёнка:
-\"\"\"{user_input}\"\"\"
-"""
-
-# Отправка запроса к OpenRouter
-async def ask_openrouter(message_text: str) -> str:
-    prompt = create_prompt(message_text)
-    url = "https://openrouter.ai/api/v1/chat/completions"
-
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/Southcentral69/psychology-bot",
-        "X-Title": "telegram-psychology-bot"
-    }
-
-    payload = {
-        "model": "mistralai/mistral-7b-instruct",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=payload) as response:
-            data = await response.json()
-            if "choices" in data:
-                return data["choices"][0]["message"]["content"]
-            elif "error" in data:
-                return f"⚠️ Ошибка: {data['error'].get('message', 'Неизвестная ошибка')}"
-            else:
-                return "⚠️ Прости, не смог ответить. Попробуй позже."
-
-# Команда /start
+# Обработка команды /start
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
-    await message.answer(
-        "Привет! Я твой психолог-бот 🧠\n"
-        "Можешь рассказать мне, что тебя тревожит — я постараюсь помочь."
-    )
+    await message.answer("Привет! Я твой психолог-бот \U0001F9E0\n"
+                         "Можешь рассказать мне, что тебя тревожит — я постараюсь помочь.")
 
-# Обработка всех сообщений
+# Основной обработчик текста
 @dp.message()
 async def handle_message(message: Message):
-    user_text = message.text
-    await message.answer("Я думаю... 💭")
-    response = await ask_openrouter(user_text)
-    await message.answer(response)
+    user_message = message.text
+    await message.answer("Я думаю... \u231B")
 
-# Запуск бота
-async def main():
-    await dp.start_polling(bot)
+    try:
+        # Отправка запроса к OpenRouter
+        async with aiohttp.ClientSession() as session:
+            headers = {
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            json_data = {
+                "model": "openchat/openchat-3.5-0106",
+                "messages": [
+                    {"role": "system", "content": "Ты дружелюбный психолог, разговаривающий с ребёнком."},
+                    {"role": "user", "content": user_message}
+                ]
+            }
+            async with session.post("https://openrouter.ai/api/v1/chat/completions",
+                                    headers=headers, json=json_data) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    reply = data["choices"][0]["message"]["content"]
+                    await message.answer(reply)
+                else:
+                    await message.answer(f"\u26A0\ufe0f Ошибка: OpenRouter вернул статус {resp.status}")
+    except Exception as e:
+        logging.exception("Ошибка при запросе к OpenRouter")
+        await message.answer(f"\u26A0\ufe0f Ошибка: {str(e)}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    from aiogram import executor
+    executor.start_polling(dp, skip_updates=True)
