@@ -1,6 +1,4 @@
 import os
-print("TELEGRAM_TOKEN =", os.getenv("TELEGRAM_TOKEN"))
-
 import logging
 import aiohttp
 import asyncio
@@ -10,9 +8,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import CommandStart
 
 # Получаем переменные окружения
-print("TELEGRAM_TOKEN =", os.getenv("TELEGRAM_TOKEN"))
-print("OPENROUTER_API_KEY =", os.getenv("OPENROUTER_API_KEY"))
-
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # Проверка на наличие токенов
 if TELEGRAM_TOKEN is None:
@@ -49,7 +46,7 @@ async def ask_openrouter(message_text: str) -> str:
     }
 
     payload = {
-        "model": "mistralai/mistral-7b-instruct",  # бесплатная и нормальная модель
+        "model": "mistralai/mistral-7b-instruct",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7
     }
