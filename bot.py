@@ -10,8 +10,9 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import CommandStart
 
 # Получаем переменные окружения
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+print("TELEGRAM_TOKEN =", os.getenv("TELEGRAM_TOKEN"))
+print("OPENROUTER_API_KEY =", os.getenv("OPENROUTER_API_KEY"))
+
 
 # Проверка на наличие токенов
 if TELEGRAM_TOKEN is None:
