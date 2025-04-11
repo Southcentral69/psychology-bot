@@ -6,6 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message
 from aiogram import Router
 from aiogram.utils.markdown import hbold
+from aiogram.filters import Command
 from aiohttp import ClientSession
 from dotenv import load_dotenv
 
@@ -24,7 +25,7 @@ dp = Dispatcher(storage=MemoryStorage())
 router = Router()
 dp.include_router(router)
 
-@router.message(commands=["start"])
+@router.message(Command("start"))
 async def start_handler(message: Message):
     await message.answer("Привет! Я твой психолог-бот 🧠\nМожешь рассказать мне, что тебя тревожит — я постараюсь помочь.")
 
