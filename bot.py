@@ -1,4 +1,6 @@
 import os
+print("TELEGRAM_TOKEN =", os.getenv("TELEGRAM_TOKEN"))
+
 import logging
 import aiohttp
 import asyncio
